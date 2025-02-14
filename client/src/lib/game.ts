@@ -31,7 +31,7 @@ const PADDLE_HEIGHT = 60;
 const BALL_RADIUS = 5;
 const PADDLE_SPEED = 300;
 const INITIAL_BALL_SPEED = 300;
-const SPEED_INCREASE_FACTOR = 1.1; // 10% increase
+const SPEED_INCREASE_FACTOR = 1.05; // Changed to 5% increase
 
 export const initialGameState: GameState = {
   leftPaddle: {
@@ -102,13 +102,13 @@ export function updateGame(state: GameState, deltaTime: number): GameState {
 
   // Ball collision with paddles
   if (checkCollision(newState.ball, newState.leftPaddle)) {
-    newState.ball.speedX = Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR; // Increase speed by 10%
+    newState.ball.speedX = Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR; // Increase speed by 5%
     const relativeIntersectY = (newState.leftPaddle.y + (PADDLE_HEIGHT / 2)) - newState.ball.y;
     newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * Math.abs(newState.ball.speedX);
   }
 
   if (checkCollision(newState.ball, newState.rightPaddle)) {
-    newState.ball.speedX = -Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR; // Increase speed by 10%
+    newState.ball.speedX = -Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR; // Increase speed by 5%
     const relativeIntersectY = (newState.rightPaddle.y + (PADDLE_HEIGHT / 2)) - newState.ball.y;
     newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * Math.abs(newState.ball.speedX);
   }

@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useGameLoop } from "@/hooks/useGameLoop";
 import { GameState, initialGameState, updateGame } from "@/lib/game";
+import { playSound } from "@/lib/audio";
+import confetti from "canvas-confetti";
+import { Button } from "@/components/ui/button";
 import GameOverDialog from "./GameOverDialog";
+import { Play, Pause, RotateCcw } from "lucide-react";
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
@@ -9,9 +13,12 @@ const CANVAS_HEIGHT = 400;
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<GameState>(initialGameState);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, setIsPaused] = useState(true);
+  const [gameStarted, setGameStarted] = useState(false);
 
   const handleKeyDown = (e: KeyboardEvent) => {
+    if (!gameStarted || isPaused) return;
+
     if (e.key === "w") {
       setGameState(prev => ({ ...prev, leftPaddleMoving: -1 }));
     } else if (e.key === "s") {
@@ -38,12 +45,17 @@ export default function GameCanvas() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, []);
+  }, [gameStarted, isPaused]);
 
   const draw = (ctx: CanvasRenderingContext2D) => {
     // Clear canvas
     ctx.fillStyle = "#1a1a1a";
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Draw border
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, CANVAS_WIDTH - 4, CANVAS_HEIGHT - 4);
 
     // Draw center line
     ctx.setLineDash([5, 15]);
@@ -84,40 +96,86 @@ export default function GameCanvas() {
   };
 
   useGameLoop((deltaTime) => {
-    if (isPaused) return;
+    if (!gameStarted || isPaused) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    setGameState(prev => updateGame(prev, deltaTime));
+    const prevState = gameState;
+    const newState = updateGame(prevState, deltaTime);
+
+    // Check for scoring
+    if (newState.leftScore !== prevState.leftScore || newState.rightScore !== prevState.rightScore) {
+      playSound.score();
+    }
+
+    // Check for paddle hits
+    if (Math.abs(newState.ball.speedX) !== Math.abs(prevState.ball.speedX)) {
+      playSound.bounce();
+    }
+
+    setGameState(newState);
     draw(ctx);
   });
 
   const handleReset = () => {
     setGameState(initialGameState);
-    setIsPaused(false);
+    setIsPaused(true);
+    setGameStarted(false);
+  };
+
+  const togglePause = () => {
+    if (!gameStarted) {
+      setGameStarted(true);
+    }
+    setIsPaused(!isPaused);
   };
 
   const isGameOver = gameState.leftScore >= 10 || gameState.rightScore >= 10;
-  if (isGameOver && !isPaused) {
+  if (isGameOver && gameStarted && !isPaused) {
     setIsPaused(true);
+    playSound.gameOver();
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
   }
 
   return (
-    <>
+    <div className="space-y-4">
       <canvas
         ref={canvasRef}
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
         className="w-full aspect-[2/1] border border-border rounded-lg"
       />
+      <div className="flex justify-center gap-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={togglePause}
+        >
+          {isPaused ? <Play className="w-4 h-4 mr-2" /> : <Pause className="w-4 h-4 mr-2" />}
+          {!gameStarted ? "Start" : isPaused ? "Resume" : "Pause"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleReset}
+        >
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Reset
+        </Button>
+      </div>
       <GameOverDialog
-        open={isGameOver}
+        open={isGameOver && gameStarted}
         winner={gameState.leftScore >= 10 ? "Player 1" : "Player 2"}
         onReset={handleReset}
       />
-    </>
+    </div>
   );
 }
