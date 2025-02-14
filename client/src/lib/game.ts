@@ -32,7 +32,7 @@ const PADDLE_HEIGHT = 60;
 const BALL_RADIUS = 5;
 const PADDLE_SPEED = 300;
 const INITIAL_BALL_SPEED = 300;
-const SPEED_INCREASE_RATE = 0.1; // Speed increase per second
+const SPEED_INCREASE_RATE = 0.02; // Speed increase per second
 
 export const initialGameState: GameState = {
   leftPaddle: {
