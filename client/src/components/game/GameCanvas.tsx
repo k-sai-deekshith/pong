@@ -126,18 +126,17 @@ export default function GameCanvas() {
   });
 
   const handleReset = () => {
-    setGameState(createInitialGameState());
+    const newState = createInitialGameState();
+    setGameState(newState);
     setIsPaused(true);
     setGameStarted(false);
 
     // Redraw the canvas immediately with the reset state
     const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        draw(ctx);
-      }
-    }
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    draw(ctx);
   };
 
   const togglePause = () => {
@@ -161,12 +160,10 @@ export default function GameCanvas() {
   // Initial draw
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        draw(ctx);
-      }
-    }
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    draw(ctx);
   }, []);
 
   return (
