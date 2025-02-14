@@ -15,6 +15,7 @@ export default function GameCanvas() {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
   const [isPaused, setIsPaused] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false); // Added state for game over
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!gameStarted || isPaused) return;
@@ -113,12 +114,22 @@ export default function GameCanvas() {
 
     // Play sound for wall or paddle collisions
     if (newState.wallCollision || newState.paddleCollision) {
+      console.log('Playing bounce sound');
       playSound.bounce();
     }
 
     // Check for scoring and play sound
     if (newState.scored) {
+      console.log('Playing score sound');
       playSound.score();
+    }
+
+    // Check for game over
+    if ((newState.leftScore >= 10 || newState.rightScore >= 10) && 
+        !isGameOver && gameStarted && !isPaused) {
+      console.log('Playing game over sound');
+      playSound.gameOver();
+      setIsGameOver(true); // Set game over state
     }
 
     setGameState(newState);
@@ -136,6 +147,7 @@ export default function GameCanvas() {
     setGameState(newState);
     setIsPaused(true);
     setGameStarted(false);
+    setIsGameOver(false); // Reset game over state
 
     // Draw the initial state immediately
     draw(ctx, newState);
@@ -148,10 +160,9 @@ export default function GameCanvas() {
     setIsPaused(!isPaused);
   };
 
-  const isGameOver = gameState.leftScore >= 10 || gameState.rightScore >= 10;
+
   if (isGameOver && gameStarted && !isPaused) {
     setIsPaused(true);
-    playSound.gameOver();
     confetti({
       particleCount: 100,
       spread: 70,
@@ -195,7 +206,7 @@ export default function GameCanvas() {
         </Button>
       </div>
       <GameOverDialog
-        open={isGameOver && gameStarted}
+        open={isGameOver}
         winner={gameState.leftScore >= 10 ? "Player 1" : "Player 2"}
         onReset={handleReset}
       />
