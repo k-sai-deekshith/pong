@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useGameLoop } from "@/hooks/useGameLoop";
-import { GameState, initialGameState, updateGame } from "@/lib/game";
+import { GameState, initialGameState, createInitialGameState, updateGame } from "@/lib/game";
 import { playSound } from "@/lib/audio";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
@@ -126,15 +126,7 @@ export default function GameCanvas() {
   });
 
   const handleReset = () => {
-    // Create a fresh copy of the initial game state
-    const freshState = {
-      ...initialGameState,
-      leftPaddle: { ...initialGameState.leftPaddle },
-      rightPaddle: { ...initialGameState.rightPaddle },
-      ball: { ...initialGameState.ball }
-    };
-
-    setGameState(freshState);
+    setGameState(createInitialGameState());
     setIsPaused(true);
     setGameStarted(false);
 
@@ -175,7 +167,7 @@ export default function GameCanvas() {
         draw(ctx);
       }
     }
-  }, []); // Draw once when component mounts
+  }, []);
 
   return (
     <div className="space-y-4">

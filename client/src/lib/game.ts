@@ -1,3 +1,5 @@
+import { GameState } from "./types";
+
 interface Paddle {
   x: number;
   y: number;
@@ -31,35 +33,39 @@ const PADDLE_HEIGHT = 60;
 const BALL_RADIUS = 5;
 const PADDLE_SPEED = 300;
 const INITIAL_BALL_SPEED = 300;
-const SPEED_INCREASE_FACTOR = 1.05; // Changed to 5% increase
+const SPEED_INCREASE_FACTOR = 1.05;
 
-export const initialGameState: GameState = {
-  leftPaddle: {
-    x: 50,
-    y: CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-    width: PADDLE_WIDTH,
-    height: PADDLE_HEIGHT,
-    speed: PADDLE_SPEED,
-  },
-  rightPaddle: {
-    x: CANVAS_WIDTH - 50 - PADDLE_WIDTH,
-    y: CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-    width: PADDLE_WIDTH,
-    height: PADDLE_HEIGHT,
-    speed: PADDLE_SPEED,
-  },
-  ball: {
-    x: CANVAS_WIDTH / 2,
-    y: CANVAS_HEIGHT / 2,
-    radius: BALL_RADIUS,
-    speedX: INITIAL_BALL_SPEED,
-    speedY: 0,
-  },
-  leftScore: 0,
-  rightScore: 0,
-  leftPaddleMoving: 0,
-  rightPaddleMoving: 0,
-};
+export function createInitialGameState(): GameState {
+  return {
+    leftPaddle: {
+      x: 50,
+      y: CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+      width: PADDLE_WIDTH,
+      height: PADDLE_HEIGHT,
+      speed: PADDLE_SPEED,
+    },
+    rightPaddle: {
+      x: CANVAS_WIDTH - 50 - PADDLE_WIDTH,
+      y: CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+      width: PADDLE_WIDTH,
+      height: PADDLE_HEIGHT,
+      speed: PADDLE_SPEED,
+    },
+    ball: {
+      x: CANVAS_WIDTH / 2,
+      y: CANVAS_HEIGHT / 2,
+      radius: BALL_RADIUS,
+      speedX: INITIAL_BALL_SPEED * (Math.random() > 0.5 ? 1 : -1),
+      speedY: 0,
+    },
+    leftScore: 0,
+    rightScore: 0,
+    leftPaddleMoving: 0,
+    rightPaddleMoving: 0,
+  };
+}
+
+export const initialGameState = createInitialGameState();
 
 function resetBall(ball: Ball, goingLeft: boolean = Math.random() > 0.5) {
   ball.x = CANVAS_WIDTH / 2;
@@ -102,13 +108,13 @@ export function updateGame(state: GameState, deltaTime: number): GameState {
 
   // Ball collision with paddles
   if (checkCollision(newState.ball, newState.leftPaddle)) {
-    newState.ball.speedX = Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR; // Increase speed by 5%
+    newState.ball.speedX = Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR;
     const relativeIntersectY = (newState.leftPaddle.y + (PADDLE_HEIGHT / 2)) - newState.ball.y;
     newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * Math.abs(newState.ball.speedX);
   }
 
   if (checkCollision(newState.ball, newState.rightPaddle)) {
-    newState.ball.speedX = -Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR; // Increase speed by 5%
+    newState.ball.speedX = -Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR;
     const relativeIntersectY = (newState.rightPaddle.y + (PADDLE_HEIGHT / 2)) - newState.ball.y;
     newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * Math.abs(newState.ball.speedX);
   }
@@ -116,10 +122,10 @@ export function updateGame(state: GameState, deltaTime: number): GameState {
   // Scoring
   if (newState.ball.x + BALL_RADIUS < 0) {
     newState.rightScore++;
-    resetBall(newState.ball, false); // Ball starts from center moving right at initial speed
+    resetBall(newState.ball, false);
   } else if (newState.ball.x - BALL_RADIUS > CANVAS_WIDTH) {
     newState.leftScore++;
-    resetBall(newState.ball, true); // Ball starts from center moving left at initial speed
+    resetBall(newState.ball, true);
   }
 
   return newState;
