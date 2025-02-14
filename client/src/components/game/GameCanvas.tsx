@@ -126,14 +126,24 @@ export default function GameCanvas() {
   });
 
   const handleReset = () => {
+    // Create a fresh copy of the initial game state
+    const freshState = {
+      ...initialGameState,
+      leftPaddle: { ...initialGameState.leftPaddle },
+      rightPaddle: { ...initialGameState.rightPaddle },
+      ball: { ...initialGameState.ball }
+    };
+
+    setGameState(freshState);
+    setIsPaused(true);
+    setGameStarted(false);
+
+    // Redraw the canvas immediately with the reset state
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        setGameState(initialGameState);
-        setIsPaused(true);
-        setGameStarted(false);
-        draw(ctx); // Immediately redraw to show reset state
+        draw(ctx);
       }
     }
   };
