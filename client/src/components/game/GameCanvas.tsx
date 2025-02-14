@@ -51,7 +51,7 @@ export default function GameCanvas() {
     };
   }, [gameStarted, isPaused]);
 
-  const draw = (ctx: CanvasRenderingContext2D) => {
+  const draw = (ctx: CanvasRenderingContext2D, state: GameState) => {
     // Clear canvas
     ctx.fillStyle = "#1a1a1a";
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -73,21 +73,21 @@ export default function GameCanvas() {
     // Draw paddles
     ctx.fillStyle = "#fff";
     ctx.fillRect(
-      gameState.leftPaddle.x,
-      gameState.leftPaddle.y,
-      gameState.leftPaddle.width,
-      gameState.leftPaddle.height
+      state.leftPaddle.x,
+      state.leftPaddle.y,
+      state.leftPaddle.width,
+      state.leftPaddle.height
     );
     ctx.fillRect(
-      gameState.rightPaddle.x,
-      gameState.rightPaddle.y,
-      gameState.rightPaddle.width,
-      gameState.rightPaddle.height
+      state.rightPaddle.x,
+      state.rightPaddle.y,
+      state.rightPaddle.width,
+      state.rightPaddle.height
     );
 
     // Draw ball
     ctx.beginPath();
-    ctx.arc(gameState.ball.x, gameState.ball.y, gameState.ball.radius, 0, Math.PI * 2);
+    ctx.arc(state.ball.x, state.ball.y, state.ball.radius, 0, Math.PI * 2);
     ctx.fillStyle = "#fff";
     ctx.fill();
     ctx.closePath();
@@ -95,8 +95,8 @@ export default function GameCanvas() {
     // Draw scores
     ctx.font = "48px 'Inter'";
     ctx.fillStyle = "#666";
-    ctx.fillText(gameState.leftScore.toString(), CANVAS_WIDTH / 4, 60);
-    ctx.fillText(gameState.rightScore.toString(), (CANVAS_WIDTH / 4) * 3, 60);
+    ctx.fillText(state.leftScore.toString(), CANVAS_WIDTH / 4, 60);
+    ctx.fillText(state.rightScore.toString(), (CANVAS_WIDTH / 4) * 3, 60);
   };
 
   useGameLoop((deltaTime) => {
@@ -122,21 +122,23 @@ export default function GameCanvas() {
     }
 
     setGameState(newState);
-    draw(ctx);
+    draw(ctx, newState);
   });
 
   const handleReset = () => {
     const newState = createInitialGameState();
-    setGameState(newState);
-    setIsPaused(true);
-    setGameStarted(false);
-
-    // Redraw the canvas immediately with the reset state
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    draw(ctx);
+
+    // Reset all state variables synchronously
+    setGameState(newState);
+    setIsPaused(true);
+    setGameStarted(false);
+
+    // Draw the initial state immediately
+    draw(ctx, newState);
   };
 
   const togglePause = () => {
@@ -163,7 +165,7 @@ export default function GameCanvas() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    draw(ctx);
+    draw(ctx, gameState);
   }, []);
 
   return (
