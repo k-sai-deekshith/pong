@@ -22,7 +22,6 @@ export interface GameState {
   rightScore: number;
   leftPaddleMoving: number;
   rightPaddleMoving: number;
-  speedMultiplier: number; // Add speed multiplier to track current speed
 }
 
 const CANVAS_WIDTH = 800;
@@ -32,7 +31,7 @@ const PADDLE_HEIGHT = 60;
 const BALL_RADIUS = 5;
 const PADDLE_SPEED = 300;
 const INITIAL_BALL_SPEED = 300;
-const SPEED_INCREASE_RATE = 0.02; // Speed increase per second
+const SPEED_INCREASE_FACTOR = 1.1; // 10% increase
 
 export const initialGameState: GameState = {
   leftPaddle: {
@@ -60,7 +59,6 @@ export const initialGameState: GameState = {
   rightScore: 0,
   leftPaddleMoving: 0,
   rightPaddleMoving: 0,
-  speedMultiplier: 1.0, // Initial multiplier
 };
 
 function resetBall(ball: Ball, goingLeft: boolean = Math.random() > 0.5) {
@@ -82,9 +80,6 @@ function checkCollision(ball: Ball, paddle: Paddle): boolean {
 export function updateGame(state: GameState, deltaTime: number): GameState {
   const newState = { ...state };
 
-  // Gradually increase speed multiplier
-  newState.speedMultiplier += SPEED_INCREASE_RATE * deltaTime;
-
   // Update paddle positions
   if (state.leftPaddleMoving !== 0) {
     newState.leftPaddle.y += state.leftPaddleMoving * state.leftPaddle.speed * deltaTime;
@@ -96,9 +91,9 @@ export function updateGame(state: GameState, deltaTime: number): GameState {
     newState.rightPaddle.y = Math.max(0, Math.min(CANVAS_HEIGHT - PADDLE_HEIGHT, newState.rightPaddle.y));
   }
 
-  // Update ball position with speed multiplier
-  newState.ball.x += newState.ball.speedX * newState.speedMultiplier * deltaTime;
-  newState.ball.y += newState.ball.speedY * newState.speedMultiplier * deltaTime;
+  // Update ball position
+  newState.ball.x += newState.ball.speedX * deltaTime;
+  newState.ball.y += newState.ball.speedY * deltaTime;
 
   // Ball collision with top and bottom walls
   if (newState.ball.y - BALL_RADIUS <= 0 || newState.ball.y + BALL_RADIUS >= CANVAS_HEIGHT) {
@@ -107,26 +102,24 @@ export function updateGame(state: GameState, deltaTime: number): GameState {
 
   // Ball collision with paddles
   if (checkCollision(newState.ball, newState.leftPaddle)) {
-    newState.ball.speedX = Math.abs(newState.ball.speedX);
+    newState.ball.speedX = Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR; // Increase speed by 10%
     const relativeIntersectY = (newState.leftPaddle.y + (PADDLE_HEIGHT / 2)) - newState.ball.y;
-    newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * INITIAL_BALL_SPEED;
+    newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * Math.abs(newState.ball.speedX);
   }
 
   if (checkCollision(newState.ball, newState.rightPaddle)) {
-    newState.ball.speedX = -Math.abs(newState.ball.speedX);
+    newState.ball.speedX = -Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR; // Increase speed by 10%
     const relativeIntersectY = (newState.rightPaddle.y + (PADDLE_HEIGHT / 2)) - newState.ball.y;
-    newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * INITIAL_BALL_SPEED;
+    newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * Math.abs(newState.ball.speedX);
   }
 
   // Scoring
   if (newState.ball.x + BALL_RADIUS < 0) {
     newState.rightScore++;
-    resetBall(newState.ball, false);
-    newState.speedMultiplier = 1.0; // Reset speed multiplier on point scored
+    resetBall(newState.ball, false); // Ball starts from center moving right at initial speed
   } else if (newState.ball.x - BALL_RADIUS > CANVAS_WIDTH) {
     newState.leftScore++;
-    resetBall(newState.ball, true);
-    newState.speedMultiplier = 1.0; // Reset speed multiplier on point scored
+    resetBall(newState.ball, true); // Ball starts from center moving left at initial speed
   }
 
   return newState;
