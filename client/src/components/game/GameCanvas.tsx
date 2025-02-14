@@ -19,6 +19,10 @@ export default function GameCanvas() {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!gameStarted || isPaused) return;
 
+    if (e.key === "w" || e.key === "s" || e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault(); // Prevent screen scrolling
+    }
+
     if (e.key === "w") {
       setGameState(prev => ({ ...prev, leftPaddleMoving: -1 }));
     } else if (e.key === "s") {
@@ -122,9 +126,16 @@ export default function GameCanvas() {
   });
 
   const handleReset = () => {
-    setGameState(initialGameState);
-    setIsPaused(true);
-    setGameStarted(false);
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        setGameState(initialGameState);
+        setIsPaused(true);
+        setGameStarted(false);
+        draw(ctx); // Immediately redraw to show reset state
+      }
+    }
   };
 
   const togglePause = () => {
@@ -144,6 +155,17 @@ export default function GameCanvas() {
       origin: { y: 0.6 }
     });
   }
+
+  // Initial draw
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        draw(ctx);
+      }
+    }
+  }, []); // Draw once when component mounts
 
   return (
     <div className="space-y-4">
