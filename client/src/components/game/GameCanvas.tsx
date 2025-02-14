@@ -116,16 +116,9 @@ export default function GameCanvas() {
       playSound.bounce();
     }
 
-    // Check for scoring with clearer sound feedback
+    // Check for scoring and play sound
     if (newState.scored) {
-      // Play the scoring sound effect
       playSound.score();
-
-      // Add a brief pause to emphasize the scoring moment
-      setIsPaused(true);
-      setTimeout(() => {
-        setIsPaused(false);
-      }, 500);
     }
 
     setGameState(newState);
