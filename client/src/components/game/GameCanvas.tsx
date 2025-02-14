@@ -111,9 +111,16 @@ export default function GameCanvas() {
     const prevState = gameState;
     const newState = updateGame(prevState, deltaTime);
 
-    // Check for scoring
+    // Check for scoring with clearer sound feedback
     if (newState.leftScore !== prevState.leftScore || newState.rightScore !== prevState.rightScore) {
+      // Play the scoring sound effect
       playSound.score();
+
+      // Add a brief pause to emphasize the scoring moment
+      setIsPaused(true);
+      setTimeout(() => {
+        setIsPaused(false);
+      }, 500);
     }
 
     // Check for paddle hits
