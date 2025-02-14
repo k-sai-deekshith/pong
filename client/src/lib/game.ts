@@ -24,6 +24,10 @@ export interface GameState {
   rightScore: number;
   leftPaddleMoving: number;
   rightPaddleMoving: number;
+  wallCollision?: boolean; // Added
+  paddleCollision?: boolean; // Added
+  scored?: boolean; // Added
+
 }
 
 const CANVAS_WIDTH = 800;
@@ -104,6 +108,7 @@ export function updateGame(state: GameState, deltaTime: number): GameState {
   // Ball collision with top and bottom walls
   if (newState.ball.y - BALL_RADIUS <= 0 || newState.ball.y + BALL_RADIUS >= CANVAS_HEIGHT) {
     newState.ball.speedY = -newState.ball.speedY;
+    return { ...newState, wallCollision: true }; // Add collision flag
   }
 
   // Ball collision with paddles
@@ -111,21 +116,25 @@ export function updateGame(state: GameState, deltaTime: number): GameState {
     newState.ball.speedX = Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR;
     const relativeIntersectY = (newState.leftPaddle.y + (PADDLE_HEIGHT / 2)) - newState.ball.y;
     newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * Math.abs(newState.ball.speedX);
+    return { ...newState, paddleCollision: true }; // Add collision flag
   }
 
   if (checkCollision(newState.ball, newState.rightPaddle)) {
     newState.ball.speedX = -Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR;
     const relativeIntersectY = (newState.rightPaddle.y + (PADDLE_HEIGHT / 2)) - newState.ball.y;
     newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * Math.abs(newState.ball.speedX);
+    return { ...newState, paddleCollision: true }; // Add collision flag
   }
 
   // Scoring
   if (newState.ball.x + BALL_RADIUS < 0) {
     newState.rightScore++;
     resetBall(newState.ball, false);
+    return { ...newState, scored: true }; // Add scoring flag
   } else if (newState.ball.x - BALL_RADIUS > CANVAS_WIDTH) {
     newState.leftScore++;
     resetBall(newState.ball, true);
+    return { ...newState, scored: true }; // Add scoring flag
   }
 
   return newState;

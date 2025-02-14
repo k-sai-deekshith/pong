@@ -111,8 +111,13 @@ export default function GameCanvas() {
     const prevState = gameState;
     const newState = updateGame(prevState, deltaTime);
 
+    // Play sound for wall or paddle collisions
+    if (newState.wallCollision || newState.paddleCollision) {
+      playSound.bounce();
+    }
+
     // Check for scoring with clearer sound feedback
-    if (newState.leftScore !== prevState.leftScore || newState.rightScore !== prevState.rightScore) {
+    if (newState.scored) {
       // Play the scoring sound effect
       playSound.score();
 
@@ -121,11 +126,6 @@ export default function GameCanvas() {
       setTimeout(() => {
         setIsPaused(false);
       }, 500);
-    }
-
-    // Check for paddle hits
-    if (Math.abs(newState.ball.speedX) !== Math.abs(prevState.ball.speedX)) {
-      playSound.bounce();
     }
 
     setGameState(newState);

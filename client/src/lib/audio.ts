@@ -5,7 +5,7 @@ const gameOverSound = new Audio("/sounds/game-over.mp3");
 
 // Set volume levels
 bounceSound.volume = 0.3;
-scoreSound.volume = 0.6; // Increased volume for more impact
+scoreSound.volume = 0.6; // Increased volume for scoring impact
 gameOverSound.volume = 0.5;
 
 export const playSound = {
