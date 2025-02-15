@@ -61,8 +61,11 @@ export default function GameCanvas() {
     };
   }, [gameStarted, isPaused]);
 
-  // Update paddle heights when slider changes
-  useEffect(() => {
+  // Update paddle heights immediately when slider changes
+  const handlePaddleHeightChange = (value: number) => {
+    setPaddleHeight(value);
+
+    // Update game state immediately with new paddle height
     setGameState(prev => {
       const leftCenter = prev.leftPaddle.y + (prev.leftPaddle.height / 2);
       const rightCenter = prev.rightPaddle.y + (prev.rightPaddle.height / 2);
@@ -71,17 +74,26 @@ export default function GameCanvas() {
         ...prev,
         leftPaddle: {
           ...prev.leftPaddle,
-          height: paddleHeight,
-          y: Math.max(0, Math.min(CANVAS_HEIGHT - paddleHeight, leftCenter - (paddleHeight / 2)))
+          height: value,
+          y: Math.max(0, Math.min(CANVAS_HEIGHT - value, leftCenter - (value / 2)))
         },
         rightPaddle: {
           ...prev.rightPaddle,
-          height: paddleHeight,
-          y: Math.max(0, Math.min(CANVAS_HEIGHT - paddleHeight, rightCenter - (paddleHeight / 2)))
+          height: value,
+          y: Math.max(0, Math.min(CANVAS_HEIGHT - value, rightCenter - (value / 2)))
         }
       };
     });
-  }, [paddleHeight]);
+
+    // Redraw canvas immediately
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        draw(ctx, gameState);
+      }
+    }
+  };
 
   const draw = (ctx: CanvasRenderingContext2D, state: GameState) => {
     // Clear canvas
@@ -140,8 +152,7 @@ export default function GameCanvas() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const prevState = gameState;
-    const newState = updateGame(prevState, deltaTime);
+    const newState = updateGame(gameState, deltaTime);
 
     if (newState.wallCollision || newState.paddleCollision) {
       playSound.bounce();
@@ -243,7 +254,7 @@ export default function GameCanvas() {
               </div>
               <Slider
                 value={[paddleHeight]}
-                onValueChange={([value]) => setPaddleHeight(value)}
+                onValueChange={([value]) => handlePaddleHeightChange(value)}
                 min={MIN_PADDLE_HEIGHT}
                 max={MAX_PADDLE_HEIGHT}
                 step={5}
