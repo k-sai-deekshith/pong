@@ -24,11 +24,11 @@ function createBeepBuffer(frequency: number, duration: number): AudioBuffer {
   return buffer;
 }
 
-// Create our sound effects
+// Create our sound effects with shorter durations
 const SOUNDS = {
-  bounce: createBeepBuffer(500, 0.1),  // 500Hz, 100ms
-  score: createBeepBuffer(800, 0.2),   // 800Hz, 200ms
-  gameOver: createBeepBuffer(300, 0.5) // 300Hz, 500ms
+  bounce: createBeepBuffer(500, 0.05),  // 500Hz, 50ms
+  score: createBeepBuffer(800, 0.1),    // 800Hz, 100ms
+  gameOver: createBeepBuffer(300, 0.3)  // 300Hz, 300ms
 };
 
 // Audio state tracking
@@ -40,9 +40,12 @@ type AudioState = {
 
 class GameAudio {
   private audioStates: Map<string, AudioState>;
+  private lastPlayTime: Map<string, number>;
+  private readonly MIN_PLAY_INTERVAL = 50; // Minimum ms between sound plays
 
   constructor() {
     this.audioStates = new Map();
+    this.lastPlayTime = new Map();
     this.initializeAudio();
   }
 
@@ -55,6 +58,7 @@ class GameAudio {
         error: null,
         lastPlayAttempt: 0
       });
+      this.lastPlayTime.set(key, 0);
     });
   }
 
@@ -69,14 +73,16 @@ class GameAudio {
   public async play(soundKey: keyof typeof SOUNDS) {
     const ctx = getAudioContext();
     const state = this.audioStates.get(soundKey);
+    const now = Date.now();
+    const lastPlay = this.lastPlayTime.get(soundKey) || 0;
 
-    if (!state) {
-      console.error(`[Audio Diagnostic] Sound ${soundKey} not found`);
+    if (!state || now - lastPlay < this.MIN_PLAY_INTERVAL) {
       return;
     }
 
     try {
-      state.lastPlayAttempt = Date.now();
+      state.lastPlayAttempt = now;
+      this.lastPlayTime.set(soundKey, now);
 
       const source = ctx.createBufferSource();
       source.buffer = SOUNDS[soundKey];
