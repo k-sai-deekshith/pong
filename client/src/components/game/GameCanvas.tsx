@@ -6,8 +6,12 @@ import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import GameOverDialog from "./GameOverDialog";
-import { Play, Pause, RotateCcw } from "lucide-react";
-import AudioDiagnostics from './AudioDiagnostics';
+import { Play, Pause, RotateCcw, Settings2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
@@ -20,7 +24,7 @@ export default function GameCanvas() {
   const [isPaused, setIsPaused] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [paddleHeight, setPaddleHeight] = useState(60); // Default paddle height
+  const [paddleHeight, setPaddleHeight] = useState(60);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!gameStarted || isPaused) return;
@@ -211,22 +215,30 @@ export default function GameCanvas() {
           <RotateCcw className="w-4 h-4 mr-2" />
           Reset
         </Button>
-      </div>
-
-      {/* Paddle Height Slider */}
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Paddle Height:</span>
-          <span className="text-sm font-medium">{paddleHeight}px</span>
-        </div>
-        <Slider
-          value={[paddleHeight]}
-          onValueChange={([value]) => setPaddleHeight(value)}
-          min={MIN_PADDLE_HEIGHT}
-          max={MAX_PADDLE_HEIGHT}
-          step={5}
-          className="w-full"
-        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Settings2 className="w-4 h-4 mr-2" />
+              Settings
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 p-4">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Paddle Height</span>
+                <span className="text-sm font-medium">{paddleHeight}px</span>
+              </div>
+              <Slider
+                value={[paddleHeight]}
+                onValueChange={([value]) => setPaddleHeight(value)}
+                min={MIN_PADDLE_HEIGHT}
+                max={MAX_PADDLE_HEIGHT}
+                step={5}
+                className="w-full"
+              />
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <GameOverDialog
@@ -234,7 +246,6 @@ export default function GameCanvas() {
         winner={gameState.leftScore >= 10 ? "Player 1" : "Player 2"}
         onReset={handleReset}
       />
-      <AudioDiagnostics />
     </div>
   );
 }
