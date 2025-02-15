@@ -24,11 +24,40 @@ function createBeepBuffer(frequency: number, duration: number): AudioBuffer {
   return buffer;
 }
 
+// Create a celebratory sound effect
+function createCelebrationBuffer(): AudioBuffer {
+  const ctx = getAudioContext();
+  const sampleRate = ctx.sampleRate;
+  const duration = 0.6; // 600ms total duration
+  const samples = duration * sampleRate;
+  const buffer = ctx.createBuffer(1, samples, sampleRate);
+  const channel = buffer.getChannelData(0);
+
+  // Create a rising sequence of tones
+  const baseFreq = 400;
+  const frequencies = [baseFreq, baseFreq * 1.25, baseFreq * 1.5, baseFreq * 2];
+  const noteDuration = duration / frequencies.length;
+
+  frequencies.forEach((freq, index) => {
+    const startSample = Math.floor(index * noteDuration * sampleRate);
+    const endSample = Math.floor((index + 1) * noteDuration * sampleRate);
+
+    for (let i = startSample; i < endSample; i++) {
+      // Add envelope to smooth transitions
+      const progress = (i - startSample) / (endSample - startSample);
+      const envelope = Math.sin(progress * Math.PI); // Creates a smooth rise and fall
+      channel[i] = Math.sin(2 * Math.PI * freq * i / sampleRate) * envelope * 0.5;
+    }
+  });
+
+  return buffer;
+}
+
 // Create our sound effects with shorter durations
 const SOUNDS = {
   bounce: createBeepBuffer(500, 0.05),  // 500Hz, 50ms
   score: createBeepBuffer(800, 0.1),    // 800Hz, 100ms
-  gameOver: createBeepBuffer(300, 0.3)  // 300Hz, 300ms
+  gameOver: createCelebrationBuffer()    // Celebratory sound effect
 };
 
 // Audio state tracking
