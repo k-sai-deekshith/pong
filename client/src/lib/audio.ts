@@ -1,40 +1,111 @@
-// Create audio instances for game sounds
-const bounceSound = new Audio("/sounds/bounce.mp3");
-const scoreSound = new Audio("/sounds/score.mp3");
-const gameOverSound = new Audio("/sounds/game-over.mp3");
+// Sound file paths
+const SOUND_FILES = {
+  bounce: "/sounds/bounce.mp3",
+  score: "/sounds/score.mp3",
+  gameOver: "/sounds/game-over.mp3"
+};
 
-// Preload sounds
-function preloadSound(audio: HTMLAudioElement) {
-  audio.load();
+// Audio state tracking
+type AudioState = {
+  loaded: boolean;
+  error: string | null;
+  lastPlayAttempt: number;
+};
+
+class GameAudio {
+  private sounds: Map<string, HTMLAudioElement>;
+  private audioStates: Map<string, AudioState>;
+
+  constructor() {
+    this.sounds = new Map();
+    this.audioStates = new Map();
+    this.initializeAudio();
+  }
+
+  private initializeAudio() {
+    Object.entries(SOUND_FILES).forEach(([key, path]) => {
+      const audio = new Audio(path);
+
+      // Set maximum volume
+      audio.volume = 1.0;
+
+      // Initialize state
+      this.audioStates.set(key, {
+        loaded: false,
+        error: null,
+        lastPlayAttempt: 0
+      });
+
+      // Add event listeners for diagnostics
+      audio.addEventListener('canplaythrough', () => {
+        console.log(`[Audio Diagnostic] ${key} loaded successfully`);
+        const state = this.audioStates.get(key);
+        if (state) {
+          state.loaded = true;
+          state.error = null;
+        }
+      });
+
+      audio.addEventListener('error', (e) => {
+        console.error(`[Audio Diagnostic] Error loading ${key}:`, e);
+        const state = this.audioStates.get(key);
+        if (state) {
+          state.loaded = false;
+          state.error = e.type;
+        }
+      });
+
+      this.sounds.set(key, audio);
+
+      // Preload the audio
+      audio.load();
+    });
+  }
+
+  public getDiagnostics(): Record<string, AudioState> {
+    const diagnostics: Record<string, AudioState> = {};
+    this.audioStates.forEach((state, key) => {
+      diagnostics[key] = { ...state };
+    });
+    return diagnostics;
+  }
+
+  public async play(soundKey: keyof typeof SOUND_FILES) {
+    const audio = this.sounds.get(soundKey);
+    const state = this.audioStates.get(soundKey);
+
+    if (!audio || !state) {
+      console.error(`[Audio Diagnostic] Sound ${soundKey} not found`);
+      return;
+    }
+
+    try {
+      state.lastPlayAttempt = Date.now();
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error(`[Audio Diagnostic] Error playing ${soundKey}:`, error);
+          state.error = error.message;
+        });
+      }
+    } catch (error) {
+      console.error(`[Audio Diagnostic] Unexpected error playing ${soundKey}:`, error);
+      state.error = error instanceof Error ? error.message : 'Unknown error';
+    }
+  }
 }
 
-// Preload all sounds
-preloadSound(bounceSound);
-preloadSound(scoreSound);
-preloadSound(gameOverSound);
+// Create and export a single instance
+export const gameAudio = new GameAudio();
 
-// Set volume levels to maximum for testing
-bounceSound.volume = 1.0; // Maximum volume
-scoreSound.volume = 1.0; // Maximum volume
-gameOverSound.volume = 1.0; // Maximum volume
-
+// Export the play functions with the same interface as before
 export const playSound = {
-  bounce: () => {
-    bounceSound.currentTime = 0;
-    bounceSound.play().catch((error) => {
-      console.error('Error playing bounce sound:', error);
-    });
-  },
-  score: () => {
-    scoreSound.currentTime = 0;
-    scoreSound.play().catch((error) => {
-      console.error('Error playing score sound:', error);
-    });
-  },
-  gameOver: () => {
-    gameOverSound.currentTime = 0;
-    gameOverSound.play().catch((error) => {
-      console.error('Error playing game over sound:', error);
-    });
-  },
+  bounce: () => gameAudio.play('bounce'),
+  score: () => gameAudio.play('score'),
+  gameOver: () => gameAudio.play('gameOver')
 };
+
+// Export diagnostics
+export const getAudioDiagnostics = () => gameAudio.getDiagnostics();

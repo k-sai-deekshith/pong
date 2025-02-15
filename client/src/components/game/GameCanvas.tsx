@@ -6,6 +6,7 @@ import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import GameOverDialog from "./GameOverDialog";
 import { Play, Pause, RotateCcw } from "lucide-react";
+import AudioDiagnostics from './AudioDiagnostics'; // Added import
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
@@ -125,8 +126,8 @@ export default function GameCanvas() {
     }
 
     // Check for game over
-    if ((newState.leftScore >= 10 || newState.rightScore >= 10) && 
-        !isGameOver && gameStarted && !isPaused) {
+    if ((newState.leftScore >= 10 || newState.rightScore >= 10) &&
+      !isGameOver && gameStarted && !isPaused) {
       console.log('Playing game over sound');
       playSound.gameOver();
       setIsGameOver(true); // Set game over state
@@ -210,6 +211,7 @@ export default function GameCanvas() {
         winner={gameState.leftScore >= 10 ? "Player 1" : "Player 2"}
         onReset={handleReset}
       />
+      <AudioDiagnostics /> {/* Added AudioDiagnostics component */}
     </div>
   );
 }
