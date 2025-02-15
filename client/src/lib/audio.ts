@@ -1,7 +1,17 @@
 // Create audio instances for game sounds
-const bounceSound = new Audio("./sounds/bounce.mp3");
-const scoreSound = new Audio("./sounds/score.mp3");
-const gameOverSound = new Audio("./sounds/game-over.mp3");
+const bounceSound = new Audio("/sounds/bounce.mp3");
+const scoreSound = new Audio("/sounds/score.mp3");
+const gameOverSound = new Audio("/sounds/game-over.mp3");
+
+// Preload sounds
+function preloadSound(audio: HTMLAudioElement) {
+  audio.load();
+}
+
+// Preload all sounds
+preloadSound(bounceSound);
+preloadSound(scoreSound);
+preloadSound(gameOverSound);
 
 // Set volume levels to maximum for testing
 bounceSound.volume = 1.0; // Maximum volume
