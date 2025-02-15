@@ -1,8 +1,8 @@
 // Sound file paths
 const SOUND_FILES = {
-  bounce: "../public/sounds/bounce.mp3",
-  score: "../public/sounds/score.mp3",
-  gameOver: "../public/sounds/game-over.mp3"
+  bounce: "/sounds/bounce.mp3",
+  score: "/sounds/score.mp3",
+  gameOver: "/sounds/game-over.mp3"
 };
 
 // Audio state tracking
@@ -83,8 +83,8 @@ class GameAudio {
       if (audio) {
         diagnostics[key] = {
           ...state,
-          networkState: audio.networkState,
-          readyState: audio.readyState
+          loaded: audio.readyState >= 2,
+          error: state.error
         };
       }
     });
