@@ -63,11 +63,24 @@ export default function GameCanvas() {
 
   // Update paddle heights when slider changes
   useEffect(() => {
-    setGameState(prev => ({
-      ...prev,
-      leftPaddle: { ...prev.leftPaddle, height: paddleHeight },
-      rightPaddle: { ...prev.rightPaddle, height: paddleHeight }
-    }));
+    setGameState(prev => {
+      const leftCenter = prev.leftPaddle.y + (prev.leftPaddle.height / 2);
+      const rightCenter = prev.rightPaddle.y + (prev.rightPaddle.height / 2);
+
+      return {
+        ...prev,
+        leftPaddle: {
+          ...prev.leftPaddle,
+          height: paddleHeight,
+          y: Math.max(0, Math.min(CANVAS_HEIGHT - paddleHeight, leftCenter - (paddleHeight / 2)))
+        },
+        rightPaddle: {
+          ...prev.rightPaddle,
+          height: paddleHeight,
+          y: Math.max(0, Math.min(CANVAS_HEIGHT - paddleHeight, rightCenter - (paddleHeight / 2)))
+        }
+      };
+    });
   }, [paddleHeight]);
 
   const draw = (ctx: CanvasRenderingContext2D, state: GameState) => {
