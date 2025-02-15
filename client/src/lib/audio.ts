@@ -1,8 +1,8 @@
 // Sound file paths
 const SOUND_FILES = {
-  bounce: "/sounds/bounce.mp3",
-  score: "/sounds/score.mp3",
-  gameOver: "/sounds/game-over.mp3"
+  bounce: "../public/sounds/bounce.mp3",
+  score: "../public/sounds/score.mp3",
+  gameOver: "../public/sounds/game-over.mp3"
 };
 
 // Audio state tracking
@@ -24,6 +24,7 @@ class GameAudio {
 
   private initializeAudio() {
     Object.entries(SOUND_FILES).forEach(([key, path]) => {
+      console.log(`[Audio Diagnostic] Attempting to load ${key} from ${path}`);
       const audio = new Audio(path);
 
       // Set maximum volume
@@ -47,25 +48,45 @@ class GameAudio {
       });
 
       audio.addEventListener('error', (e) => {
-        console.error(`[Audio Diagnostic] Error loading ${key}:`, e);
+        const error = e.target as HTMLAudioElement;
+        const errorMessage = error.error ? error.error.message : 'Unknown error';
+        console.error(`[Audio Diagnostic] Error loading ${key}:`, errorMessage);
         const state = this.audioStates.get(key);
         if (state) {
           state.loaded = false;
-          state.error = e.type;
+          state.error = errorMessage;
         }
+      });
+
+      // Log the audio element's networkState and readyState
+      console.log(`[Audio Diagnostic] ${key} initial state:`, {
+        networkState: audio.networkState,
+        readyState: audio.readyState
       });
 
       this.sounds.set(key, audio);
 
       // Preload the audio
-      audio.load();
+      try {
+        audio.load();
+        console.log(`[Audio Diagnostic] ${key} load() called`);
+      } catch (error) {
+        console.error(`[Audio Diagnostic] Error in load() for ${key}:`, error);
+      }
     });
   }
 
   public getDiagnostics(): Record<string, AudioState> {
     const diagnostics: Record<string, AudioState> = {};
     this.audioStates.forEach((state, key) => {
-      diagnostics[key] = { ...state };
+      const audio = this.sounds.get(key);
+      if (audio) {
+        diagnostics[key] = {
+          ...state,
+          networkState: audio.networkState,
+          readyState: audio.readyState
+        };
+      }
     });
     return diagnostics;
   }
