@@ -2,6 +2,8 @@
 
 A simple, classic Pong game for two players. This project is built using HTML, CSS, and JavaScript. Both players control their paddles with different keys, aiming to bounce the ball past the opponent’s paddle.
 
+You can play the game at : https://react-pong-duel-ksaideekshith.replit.app/
+
 ![Main Screen](images/two_player_pong_main.png "Two-Player Pong Main Screen")
 
 ## Table of Contents
