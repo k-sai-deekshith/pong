@@ -24,16 +24,15 @@ export interface GameState {
   rightScore: number;
   leftPaddleMoving: number;
   rightPaddleMoving: number;
-  wallCollision?: boolean; // Added
-  paddleCollision?: boolean; // Added
-  scored?: boolean; // Added
-
+  wallCollision?: boolean;
+  paddleCollision?: boolean;
+  scored?: boolean;
 }
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
 const PADDLE_WIDTH = 10;
-const PADDLE_HEIGHT = 60;
+const DEFAULT_PADDLE_HEIGHT = 60;
 const BALL_RADIUS = 5;
 const PADDLE_SPEED = 300;
 const INITIAL_BALL_SPEED = 300;
@@ -43,16 +42,16 @@ export function createInitialGameState(): GameState {
   return {
     leftPaddle: {
       x: 50,
-      y: CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+      y: CANVAS_HEIGHT / 2 - DEFAULT_PADDLE_HEIGHT / 2,
       width: PADDLE_WIDTH,
-      height: PADDLE_HEIGHT,
+      height: DEFAULT_PADDLE_HEIGHT,
       speed: PADDLE_SPEED,
     },
     rightPaddle: {
       x: CANVAS_WIDTH - 50 - PADDLE_WIDTH,
-      y: CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+      y: CANVAS_HEIGHT / 2 - DEFAULT_PADDLE_HEIGHT / 2,
       width: PADDLE_WIDTH,
-      height: PADDLE_HEIGHT,
+      height: DEFAULT_PADDLE_HEIGHT,
       speed: PADDLE_SPEED,
     },
     ball: {
@@ -93,12 +92,12 @@ export function updateGame(state: GameState, deltaTime: number): GameState {
   // Update paddle positions
   if (state.leftPaddleMoving !== 0) {
     newState.leftPaddle.y += state.leftPaddleMoving * state.leftPaddle.speed * deltaTime;
-    newState.leftPaddle.y = Math.max(0, Math.min(CANVAS_HEIGHT - PADDLE_HEIGHT, newState.leftPaddle.y));
+    newState.leftPaddle.y = Math.max(0, Math.min(CANVAS_HEIGHT - state.leftPaddle.height, newState.leftPaddle.y));
   }
 
   if (state.rightPaddleMoving !== 0) {
     newState.rightPaddle.y += state.rightPaddleMoving * state.rightPaddle.speed * deltaTime;
-    newState.rightPaddle.y = Math.max(0, Math.min(CANVAS_HEIGHT - PADDLE_HEIGHT, newState.rightPaddle.y));
+    newState.rightPaddle.y = Math.max(0, Math.min(CANVAS_HEIGHT - state.rightPaddle.height, newState.rightPaddle.y));
   }
 
   // Reset collision flags at the start of each update
@@ -120,16 +119,16 @@ export function updateGame(state: GameState, deltaTime: number): GameState {
   // Ball collision with paddles
   if (checkCollision(newState.ball, newState.leftPaddle)) {
     newState.ball.speedX = Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR;
-    const relativeIntersectY = (newState.leftPaddle.y + (PADDLE_HEIGHT / 2)) - newState.ball.y;
-    newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * Math.abs(newState.ball.speedX);
+    const relativeIntersectY = (newState.leftPaddle.y + (newState.leftPaddle.height / 2)) - newState.ball.y;
+    newState.ball.speedY = -(relativeIntersectY / (newState.leftPaddle.height / 2)) * Math.abs(newState.ball.speedX);
     newState.paddleCollision = true;
     return newState;
   }
 
   if (checkCollision(newState.ball, newState.rightPaddle)) {
     newState.ball.speedX = -Math.abs(newState.ball.speedX) * SPEED_INCREASE_FACTOR;
-    const relativeIntersectY = (newState.rightPaddle.y + (PADDLE_HEIGHT / 2)) - newState.ball.y;
-    newState.ball.speedY = -(relativeIntersectY / (PADDLE_HEIGHT / 2)) * Math.abs(newState.ball.speedX);
+    const relativeIntersectY = (newState.rightPaddle.y + (newState.rightPaddle.height / 2)) - newState.ball.y;
+    newState.ball.speedY = -(relativeIntersectY / (newState.rightPaddle.height / 2)) * Math.abs(newState.ball.speedX);
     newState.paddleCollision = true;
     return newState;
   }

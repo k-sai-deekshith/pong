@@ -4,19 +4,23 @@ import { GameState, initialGameState, createInitialGameState, updateGame } from 
 import { playSound } from "@/lib/audio";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import GameOverDialog from "./GameOverDialog";
 import { Play, Pause, RotateCcw } from "lucide-react";
-import AudioDiagnostics from './AudioDiagnostics'; // Added import
+import AudioDiagnostics from './AudioDiagnostics';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
+const MIN_PADDLE_HEIGHT = 40;
+const MAX_PADDLE_HEIGHT = 100;
 
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<GameState>(initialGameState);
   const [isPaused, setIsPaused] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
-  const [isGameOver, setIsGameOver] = useState(false); // Added state for game over
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [paddleHeight, setPaddleHeight] = useState(60); // Default paddle height
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!gameStarted || isPaused) return;
@@ -52,6 +56,15 @@ export default function GameCanvas() {
       window.removeEventListener("keyup", handleKeyUp);
     };
   }, [gameStarted, isPaused]);
+
+  // Update paddle heights when slider changes
+  useEffect(() => {
+    setGameState(prev => ({
+      ...prev,
+      leftPaddle: { ...prev.leftPaddle, height: paddleHeight },
+      rightPaddle: { ...prev.rightPaddle, height: paddleHeight }
+    }));
+  }, [paddleHeight]);
 
   const draw = (ctx: CanvasRenderingContext2D, state: GameState) => {
     // Clear canvas
@@ -113,24 +126,18 @@ export default function GameCanvas() {
     const prevState = gameState;
     const newState = updateGame(prevState, deltaTime);
 
-    // Play sound for wall or paddle collisions
     if (newState.wallCollision || newState.paddleCollision) {
-      console.log('Playing bounce sound');
       playSound.bounce();
     }
 
-    // Check for scoring and play sound
     if (newState.scored) {
-      console.log('Playing score sound');
       playSound.score();
     }
 
-    // Check for game over
     if ((newState.leftScore >= 10 || newState.rightScore >= 10) &&
       !isGameOver && gameStarted && !isPaused) {
-      console.log('Playing game over sound');
       playSound.gameOver();
-      setIsGameOver(true); // Set game over state
+      setIsGameOver(true);
     }
 
     setGameState(newState);
@@ -139,18 +146,19 @@ export default function GameCanvas() {
 
   const handleReset = () => {
     const newState = createInitialGameState();
+    newState.leftPaddle.height = paddleHeight;
+    newState.rightPaddle.height = paddleHeight;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Reset all state variables synchronously
     setGameState(newState);
     setIsPaused(true);
     setGameStarted(false);
-    setIsGameOver(false); // Reset game over state
+    setIsGameOver(false);
 
-    // Draw the initial state immediately
     draw(ctx, newState);
   };
 
@@ -161,7 +169,6 @@ export default function GameCanvas() {
     setIsPaused(!isPaused);
   };
 
-
   if (isGameOver && gameStarted && !isPaused) {
     setIsPaused(true);
     confetti({
@@ -171,7 +178,6 @@ export default function GameCanvas() {
     });
   }
 
-  // Initial draw
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -206,12 +212,29 @@ export default function GameCanvas() {
           Reset
         </Button>
       </div>
+
+      {/* Paddle Height Slider */}
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground">Paddle Height:</span>
+          <span className="text-sm font-medium">{paddleHeight}px</span>
+        </div>
+        <Slider
+          value={[paddleHeight]}
+          onValueChange={([value]) => setPaddleHeight(value)}
+          min={MIN_PADDLE_HEIGHT}
+          max={MAX_PADDLE_HEIGHT}
+          step={5}
+          className="w-full"
+        />
+      </div>
+
       <GameOverDialog
         open={isGameOver}
         winner={gameState.leftScore >= 10 ? "Player 1" : "Player 2"}
         onReset={handleReset}
       />
-      <AudioDiagnostics /> {/* Added AudioDiagnostics component */}
+      <AudioDiagnostics />
     </div>
   );
 }
